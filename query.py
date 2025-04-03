@@ -62,7 +62,7 @@ def generate_aiollama_response(
     """
 
 
-    instruction = f"cuantas personas afrocolombianas hay en caldas segun el texto\n```\n{str(load_data)}\n```"
+    instruction = f"{query}\n```\n{str(load_data)}\n```"
 
     messages = [
         {"role": "system", "content": "Eres un asistente investigativo estadistico con enfoque social. Tu tarea es como investigador extraer información de manera precisa minuciosa y detallada. Responde completamente y sin omitir ninguna instrucción."},
