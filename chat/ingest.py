@@ -39,10 +39,9 @@ from typing import List
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
 
 
-# Load environment variables
 persist_directory = os.environ.get('PERSIST_DIRECTORY', 'db')
 source_directory = os.environ.get('SOURCE_DIRECTORY', 'source_documents')
-embeddings_model_name = os.environ.get('EMBEDDINGS_MODEL_NAME', 'all-mpnet-base-v2')
+embeddings_model_name = os.environ.get('EMBEDDINGS_MODEL_NAME', 'intfloat/multilingual-e5-large')
 chunk_size = 512  
 chunk_overlap = 128  
 
@@ -50,7 +49,6 @@ chunk_overlap = 128
 
 
 
-# Map file extensions to document loaders and their arguments
 LOADER_MAPPING = {
     ".csv": (CSVLoader, {}),
     # ".docx": (Docx2txtLoader, {}),
@@ -66,13 +64,12 @@ LOADER_MAPPING = {
     ".ppt": (UnstructuredPowerPointLoader, {}),
     ".pptx": (UnstructuredPowerPointLoader, {}),
     ".txt": (TextLoader, {"encoding": "utf8"}),
-    # Add more mappings for other file extensions and loaders as needed
 }
 
 
 def clean_text(content: str) -> str:
     """Remove excessive whitespace and line breaks"""
-    content = ' '.join(content.split())  # Collapse whitespace
+    content = ' '.join(content.split())  
     return content.strip()
 
 
@@ -83,7 +80,6 @@ def process_pdf_with_tables(file_path: str) -> List[Document]:
     
     with pdfplumber.open(file_path) as pdf:
         for page_num, page in enumerate(pdf.pages, start=1):
-            # Extract regular text first
             text = page.extract_text()
             if text and text.strip():
                 documents.append(Document(
@@ -95,7 +91,6 @@ def process_pdf_with_tables(file_path: str) -> List[Document]:
                     }
                 ))
             
-            # Process all tables into readable text format
             for table_num, table in enumerate(page.extract_tables(), start=1):
                 table_str = format_table_as_text(table)
                 if table_str:
@@ -117,20 +112,16 @@ def format_table_as_text(table_data: List[List[Any]]) -> str:
     if not table_data or len(table_data) < 2:
         return ""
     
-    # Determine column widths
     col_widths = []
     for col_idx in range(len(table_data[0])):
         max_len = max(len(str(row[col_idx])) for row in table_data if col_idx < len(row))
-        col_widths.append(min(max_len, 30))  # Cap at 30 chars
+        col_widths.append(min(max_len, 30))  
     
-    # Build table string
     table_str = ""
     for row_idx, row in enumerate(table_data):
-        # Skip empty rows
         if not any(cell for cell in row):
             continue
             
-        # Build row string
         row_str = ""
         for col_idx, cell in enumerate(row):
             if col_idx >= len(col_widths):
@@ -140,7 +131,6 @@ def format_table_as_text(table_data: List[List[Any]]) -> str:
         
         table_str += row_str.strip() + "\n"
         
-        # Add separator after header
         if row_idx == 0:
             table_str += "-" * len(row_str) + "\n"
     
@@ -166,7 +156,6 @@ def load_single_document(file_path: str) -> List[Document]:
         else:
             raise ValueError(f"Unsupported file extension '{ext}'")
         
-        # Add consistent metadata
         for doc in docs:
             doc.metadata.update({
                 "file_type": ext[1:],
@@ -190,7 +179,6 @@ def does_vectorstore_exist(persist_directory: str) -> bool:
         if os.path.exists(os.path.join(persist_directory, 'chroma-collections.parquet')) and os.path.exists(os.path.join(persist_directory, 'chroma-embeddings.parquet')):
             list_index_files = glob.glob(os.path.join(persist_directory, 'index/*.bin'))
             list_index_files += glob.glob(os.path.join(persist_directory, 'index/*.pkl'))
-            # At least 3 documents are needed in a working vectorstore
             if len(list_index_files) > 3:
                 return True
     return False

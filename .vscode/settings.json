@@ -1,0 +1,6 @@
+{
+    "path-intellisense.autoTriggerNextSuggestion": true,
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.completeFunctionParens": true,
+    "python.analysis.inlayHints.functionReturnTypes": true
+}
